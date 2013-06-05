@@ -3,7 +3,7 @@
 
   "name": "Intrusion prevention system",
   "description": "Helps the security of your browser.",
-  "version": "0.0.1",
+  "version": "0.1.0",
 
   "background": {
     "scripts": ["background.js"]
@@ -18,8 +18,8 @@
     "https://*/*", 
     "http://*/*"
   ],
-  "browser_action": {
-    "default_icon": "icon.png",
+  "page_action": {
+    "default_icon": "icon-19.png",
     "default_popup": "popup.html"
   }
 }

@@ -8,6 +8,7 @@ function initExt() {
 
 function updateCpuInfo() {
   var el = document.getElementById('load');
+  var el = document.getElementById('load');
   var page = chrome.extension.getBackgroundPage();
   cpu = page.cpuUsage;
   el.innerHTML = cpu;
