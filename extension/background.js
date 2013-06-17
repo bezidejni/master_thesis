@@ -1,11 +1,58 @@
 cpuUsage = 0;
-var running = localStorage["running"] || false;
+var running = localStorage["running"] || "false";
 var trackedSites = localStorage['trackedSites'] || "";
 var pollingFrequency = localStorage["pollingFrequency"] * 1000;
 var logProcess = false;
+window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+var fileWriter = null;
+
+function errorHandler(e) {
+  var msg = '';
+  switch (e.code) {
+    case FileError.QUOTA_EXCEEDED_ERR:
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
+    case FileError.NOT_FOUND_ERR:
+      msg = 'NOT_FOUND_ERR';
+      break;
+    case FileError.SECURITY_ERR:
+      msg = 'SECURITY_ERR';
+      break;
+    case FileError.INVALID_MODIFICATION_ERR:
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
+    case FileError.INVALID_STATE_ERR:
+      msg = 'INVALID_STATE_ERR';
+      break;
+    default:
+      msg = 'Unknown Error';
+      break;
+  }
+  alert('Error: ' + msg);
+}
+
+function onInitFs(fs) {
+    fs.root.getFile('log.txt', {create: true}, function(file) {
+        file.createWriter(function(fw) {
+            fileWriter = fw;
+        });
+    }, errorHandler);
+}
+
+function initFS() {
+  window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
+    window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+  }, function(e) {
+  console.log('Error', e);
+});
+}
+
+
+if (window.requestFileSystem) {
+  initFS();
+}
 
 function init() {
-
     chrome.experimental.processes.onUpdated.addListener(function(processes) {
         var total = 0;
         for(var pid in processes) {
@@ -20,6 +67,7 @@ function saveCpuInfo() {
     var time = new Date().getTime();
     var key = "cpu_" + time;
     localStorage.setItem(key, cpuUsage);
+    fileWriter.write(new Blob([time + ": " + cpuUsage + "\n"], {type: 'text/plain'}));
 }
 
 function logOrNot(tabId, changeInfo, tab) {

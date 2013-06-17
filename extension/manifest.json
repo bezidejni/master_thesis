@@ -15,6 +15,7 @@
     "tabs",
     "storage",
     "experimental",
+    "unlimitedStorage",
     "https://*/*", 
     "http://*/*"
   ],
