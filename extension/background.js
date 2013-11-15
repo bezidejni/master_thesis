@@ -1,59 +1,21 @@
 cpuUsage = 0;
-var running = localStorage["running"] || "false";
+var trackingEnabled = store.get("store.settings.trackingEnabled") || "false";
+var trackAllSites = store.get("store.settings.trackAllSites");
 var trackedSites = localStorage['trackedSites'] || "";
-var pollingFrequency = localStorage["pollingFrequency"] * 1000;
+var pollingFrequency = store.get("store.settings.pollingFrequency") * 1000;
 var logProcess = false;
-window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
-var fileWriter = null;
+var fileWriter;
+var filer = new Filer();
 
-function errorHandler(e) {
-  var msg = '';
-  switch (e.code) {
-    case FileError.QUOTA_EXCEEDED_ERR:
-      msg = 'QUOTA_EXCEEDED_ERR';
-      break;
-    case FileError.NOT_FOUND_ERR:
-      msg = 'NOT_FOUND_ERR';
-      break;
-    case FileError.SECURITY_ERR:
-      msg = 'SECURITY_ERR';
-      break;
-    case FileError.INVALID_MODIFICATION_ERR:
-      msg = 'INVALID_MODIFICATION_ERR';
-      break;
-    case FileError.INVALID_STATE_ERR:
-      msg = 'INVALID_STATE_ERR';
-      break;
-    default:
-      msg = 'Unknown Error';
-      break;
-  }
-  alert('Error: ' + msg);
+function onError(e) {
+  console.log('Error' + e.name);
 }
 
-function onInitFs(fs) {
-    fs.root.getFile('log.txt', {create: true}, function(file) {
-        file.createWriter(function(fw) {
-            fileWriter = fw;
-        });
-    }, errorHandler);
-}
-
-function initFS() {
-  window.webkitStorageInfo.requestQuota(PERSISTENT, 1024*1024, function(grantedBytes) {
-    window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
-  }, function(e) {
-  console.log('Error', e);
-});
-}
-
-
-if (window.requestFileSystem) {
-  initFS();
-}
+filer.init({persistent: true, size: 1024 * 1024}, function(fs) {
+}, onError);
 
 function init() {
-    chrome.experimental.processes.onUpdated.addListener(function(processes) {
+    chrome.processes.onUpdated.addListener(function(processes) {
         var total = 0;
         for(var pid in processes) {
             total += processes[pid].cpu;
@@ -66,14 +28,13 @@ function init() {
 function saveCpuInfo() {
     var time = new Date().getTime();
     var key = "cpu_" + time;
-    localStorage.setItem(key, cpuUsage);
-    fileWriter.write(new Blob([time + ": " + cpuUsage + "\n"], {type: 'text/plain'}));
+    store.set(key, cpuUsage);
+    filer.write("cpu_log.txt", {data: time + ": " + cpuUsage + "\n", type: 'text/plain', append:true});
 }
 
 function logOrNot(tabId, changeInfo, tab) {
-    if (siteTracked(tab.url)) {
-        chrome.pageAction.show(tabId);
-        if (running == "true") {
+    if (trackingEnabled === true) {
+        if (trackAllSites || siteTracked(tab.url)) {
             if (logProcess) {
                 clearInterval(logProcess);
             }
@@ -92,13 +53,5 @@ function siteTracked(url) {
     }
 }
 
-// Called when the url of a tab changes.
-function checkForValidUrl(tabId, changeInfo, tab) {
-  // If the letter 'g' is found in the tab's URL...
-  if (tab.url.indexOf('g') > -1) {
-    // ... show the page action.
-    chrome.pageAction.show(tabId);
-  }
-}
 
 document.addEventListener('DOMContentLoaded', init);
