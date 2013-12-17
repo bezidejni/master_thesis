@@ -3,7 +3,7 @@
 
   "name": "Intrusion Prevention System",
   "description": "Helps the security of your browser.",
-  "version": "0.1.0",
+  "version": "0.1",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -27,5 +27,6 @@
     "http://*/*"
   ],
   "content_security_policy": "default-src 'self'  chrome-extension-resource: ; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval';  connect-src *; frame-src *;",
-  "web_accessible_resources": ["*"]
+  "web_accessible_resources": ["*"],
+  "update_url": "https://github.com/bezidejni/master_thesis/raw/master/extension_binary/updates.xml",
 }
