@@ -50,7 +50,7 @@ this.manifest = {
         {
             "tab": "DOM Elements",
             "group": "Settings",
-            "name": "domElements",
+            "name": "trackedElements",
             "type": "textarea",
             "label": "DOM Elements to track:",
             "text": "For example: div"

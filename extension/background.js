@@ -23,6 +23,7 @@ function init() {
         cpuUsage = total;
     });
     chrome.tabs.onUpdated.addListener(logOrNot);
+    countDOMElements();
 }
 
 function saveCpuInfo() {
@@ -31,6 +32,28 @@ function saveCpuInfo() {
     store.set(key, cpuUsage);
     filer.write("cpu_log.txt", {data: time + ": " + cpuUsage + "\n", type: 'text/plain', append:true});
 }
+
+function countDOMElements() {
+    chrome.runtime.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            if (request.type == "tagCount") {
+                console.log("Broj elemenata " + request.tagName + " je " + request.count);
+                sendResponse({answer: "super"});
+            }
+        });
+    var trackedElements = store.get('store.settings.trackedElements') || "";
+    console.log(trackedElements);
+    trackedElements = trackedElements.split('\n');
+    chrome.tabs.query({active: true}, function(tabs) {
+        console.log(tabs);
+        for (var i = 0; i < tabs.length; i++) {
+            chrome.tabs.sendMessage(tabs[i].id, {"type": "trackedElements", "trackedElements": trackedElements}, function(response) {
+                console.log(response.answer);
+            });
+        }
+    });
+}
+
 
 function logOrNot(tabId, changeInfo, tab) {
     if (trackingEnabled === true) {
