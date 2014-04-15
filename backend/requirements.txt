@@ -1,0 +1,9 @@
+Django==1.6.2
+Markdown==2.4
+South==0.8.4
+django-filter==0.7
+django-model-utils==2.0.3
+djangorestframework==2.3.13
+gnureadline==6.3.3
+ipython==2.0.0
+wsgiref==0.1.2
