@@ -10,6 +10,10 @@ var filer = new Filer();
 var networkEventsWaiting = {};
 var networkEventsComplete = [];
 
+var domElementCount = [];
+
+var cpuUsageList = [];
+
 function onError(e) {
   console.log('Error' + e.name);
 }
@@ -18,13 +22,7 @@ filer.init({persistent: true, size: 1024 * 1024}, function(fs) {
 }, onError);
 
 function init() {
-    chrome.processes.onUpdated.addListener(function(processes) {
-        var total = 0;
-        for(var pid in processes) {
-            total += processes[pid].cpu;
-        }
-        cpuUsage = total;
-    });
+
     chrome.tabs.onUpdated.addListener(logOrNot);
 }
 
@@ -54,37 +52,54 @@ function siteTracked(url) {
 
 document.addEventListener('DOMContentLoaded', init);
 
+function handleNetworkResponse(details) {
+    chrome.tabs.get(details.tabId, function(tab) {
+        networkEventsWaiting[details.requestId].source_url = tab.url;
+        networkEventsComplete.push(networkEventsWaiting[details.requestId]);
+        delete networkEventsWaiting[details.requestId];
+
+    });
+    networkEventsWaiting[details.requestId] = {
+        destination_url: details.url,
+        method: details.method,
+        http_status: details.statusCode,
+        type: details.type,
+        timestamp: details.timeStamp
+    };
+};
+
+function handleDOMElementCount(request, sender, sendResponse) {
+    if (request.type === "tagCount") {
+        console.log("Broj elemenata " + request.tagName + " je " + request.count);
+        domElementCount.push({
+            url: sender.tab.url,
+            element_name: request.tagName,
+            count: request.count
+        });
+        console.log(domElementCount);
+        sendResponse({answer: "super"});
+    } else if (request.type === "requestTrackedElements") {
+        var trackedElements = store.get('store.settings.trackedElements') || "";
+        trackedElements = trackedElements.split('\n');
+        sendResponse({trackedElements: trackedElements});
+    }
+};
+
 chrome.webRequest.onResponseStarted.addListener(
-        function(details) {
-            chrome.tabs.get(details.tabId, function(tab) {
-                networkEventsWaiting[details.requestId].source_url = tab.url;
-                networkEventsComplete.push(networkEventsWaiting[details.requestId]);
-                delete networkEventsWaiting[details.requestId];
-
-            });
-            networkEventsWaiting[details.requestId] = {
-                destination_url: details.url,
-                method: details.method,
-                http_status: details.statusCode,
-                type: details.type,
-                timestamp: details.timeStamp
-            };
-
-        },
+        handleNetworkResponse,
         {urls: ["*://*.index.hr/*"], types: ['main_frame', 'sub_frame', 'script']}
 );
 
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        if (request.type === "tagCount") {
-            console.log("Broj elemenata " + request.tagName + " je " + request.count);
-            sendResponse({answer: "super"});
-        } else if (request.type === "requestTrackedElements") {
-            var trackedElements = store.get('store.settings.trackedElements') || "";
-            trackedElements = trackedElements.split('\n');
-            sendResponse({trackedElements: trackedElements});
-        }
-    });
+chrome.runtime.onMessage.addListener(handleDOMElementCount);
+
+chrome.processes.onUpdated.addListener(function(processes) {
+    var total = 0;
+    var timestamp = new Date().getTime();
+    for(var pid in processes) {
+        total += processes[pid].cpu;
+    }
+    cpuUsageList.push({'timestamp': timestamp, value:total.toFixed(3)});
+});
 
 (function sendNetworkDataHome() {
     $.ajax({
@@ -95,10 +110,41 @@ chrome.runtime.onMessage.addListener(
         type: 'POST',
         complete: function() {
             // Schedule the next request when the current one's complete
-            //setTimeout(sendDataHome, 10000);
+            setTimeout(sendNetworkDataHome, 10000);
             networkEventsComplete = [];
 
         }
     });
 })();
 
+(function sendDOMElementDataHome() {
+    $.ajax({
+        url: 'http://127.0.0.1:8000/dom-element-count/',
+        data: JSON.stringify(domElementCount),
+        processData: false,
+        contentType: 'application/json',
+        type: 'POST',
+        complete: function() {
+            // Schedule the next request when the current one's complete
+            setTimeout(sendDOMElementDataHome, 10000);
+            domElementCount = [];
+
+        }
+    });
+})();
+
+(function sendCPUInfoDataHome() {
+    $.ajax({
+        url: 'http://127.0.0.1:8000/cpu-info/',
+        data: JSON.stringify(cpuUsageList),
+        processData: false,
+        contentType: 'application/json',
+        type: 'POST',
+        complete: function() {
+            // Schedule the next request when the current one's complete
+            setTimeout(sendCPUInfoDataHome, 10000);
+            cpuUsageList = [];
+
+        }
+    });
+})();

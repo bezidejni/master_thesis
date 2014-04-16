@@ -19,3 +19,10 @@ class NetworkInfo(models.Model):
     http_status = models.CharField(max_length=3, blank=True)
     type = models.CharField(max_length=15, choices=TYPES, default=TYPES.main_frame)
     timestamp = models.DateTimeField(default=datetime.now)
+
+
+class DOMElementCount(models.Model):
+    url = models.URLField(blank=True)
+    element_name = models.CharField(max_length=30)
+    count = models.IntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now_add=True)

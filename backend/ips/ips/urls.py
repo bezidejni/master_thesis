@@ -1,13 +1,14 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from rest_framework import routers
-from stats.views import CPUInfoViewSet, NetworkInfoViewSet
+from stats.views import CPUInfoViewSet, NetworkInfoViewSet, DOMElementCountViewSet
 
 admin.autodiscover()
 
 router = routers.DefaultRouter()
-router.register('cpuinfo', CPUInfoViewSet)
+router.register('cpu-info', CPUInfoViewSet)
 router.register('network-info', NetworkInfoViewSet)
+router.register('dom-element-count', DOMElementCountViewSet)
 
 urlpatterns = patterns('',
     url(r'^', include(router.urls)),
