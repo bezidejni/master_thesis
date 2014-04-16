@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stats</title>
+  <link href="{% static 'css/c3.css' %}" rel="stylesheet">
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+  <script src="{% static 'js/d3.v3.js' %}"></script>
+  <script src="{% static 'js/c3.js' %}"></script>
+</head>
+<body>
+<div class="container">
+  <h1>Stats page</h1>
+  <div class="row">
+    <div class="col-md-6">
+      <h3>CPU usage through time</h3>
+      <div id="chart_cpu"></div>
+    </div>
+    <div class="col-md-6">
+      <h3>HTTP response statuses</h3>
+      <div id="chart_http"></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>Network requests</h2>
+      <table class="table table-striped table-condensed">
+        <thead>
+        <tr>
+          <th>Source URL</th>
+          <th>Destination URL</th>
+          <th>Method</th>
+          <th>HTTP Status</th>
+          <th>Type</th>
+          <th>Timestamp</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for network in network %}
+          <tr>
+            <td>{{ network.source_url|urlize }}</td>
+            <td>{{ network.destination_url|urlizetrunc:130 }}</td>
+            <td>{{ network.method }}</td>
+            <td>{{ network.http_status }}</td>
+            <td>{{ network.type }}</td>
+            <td>{{ network.timestamp }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>DOM Elements</h2>
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>URL</th>
+          <th>Element</th>
+          <th>Count</th>
+          <th>Timestamp</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for dom_element in dom %}
+          <tr>
+            <td>{{ dom_element.url|urlize }}</td>
+            <td>{{ dom_element.element_name }}</td>
+            <td>{{ dom_element.count }}</td>
+            <td>{{ dom_element.timestamp }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h2>CPU stats</h2>
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>Value</th>
+          <th>Timestamp</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for cpu_info in cpu %}
+          <tr>
+            <td>{{ cpu_info.value }} %</td>
+            <td>{{ cpu_info.timestamp }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  var value_data = {{ cpu_value_data|safe }};
+  value_data.unshift('y');
+  var time_data = {{ cpu_time_data|safe }};
+  time_data.unshift('x');
+  var data = [time_data, value_data];
+  var cpu_chart = c3.generate({
+    bindto: '#chart_cpu',
+    data: {
+      x: 'x',
+      x_format: '%H:%M:%S',
+      columns: data},
+    axis: {
+      x: {
+        type: 'timeseries' // x axis will be shown as timeseries
+      }
+    }
+  });
+
+  var http_chart = c3.generate({
+    bindto: '#chart_http',
+    data: {
+      // iris data from R
+      columns: {{ http_list|safe }},
+      type : 'pie'
+    },
+    pie: {
+      onclick: function (d, i) { console.log(d, i); },
+      onmouseover: function (d, i) { console.log(d, i); },
+      onmouseout: function (d, i) { console.log(d, i); }
+    }
+  });
+</script>
+</body>
+</html>

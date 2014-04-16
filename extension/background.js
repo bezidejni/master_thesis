@@ -87,7 +87,7 @@ function handleDOMElementCount(request, sender, sendResponse) {
 
 chrome.webRequest.onResponseStarted.addListener(
         handleNetworkResponse,
-        {urls: ["*://*.index.hr/*"], types: ['main_frame', 'sub_frame', 'script']}
+        {urls: ["*://*.com/*"], types: ['main_frame', 'sub_frame', 'script']}
 );
 
 chrome.runtime.onMessage.addListener(handleDOMElementCount);

@@ -13,8 +13,8 @@ class NetworkInfo(models.Model):
     TYPES = Choices("main_frame", "sub_frame", "stylesheet", "script", "image", "object", "xmlhttprequest", "other")
     METHODS = Choices("GET", "POST")
 
-    source_url = models.URLField(blank=True)
-    destination_url = models.URLField(blank=True)
+    source_url = models.URLField(max_length=1000, blank=True)
+    destination_url = models.URLField(max_length=1000, blank=True)
     method = models.CharField(max_length=10, choices=METHODS, default=METHODS.GET)
     http_status = models.CharField(max_length=3, blank=True)
     type = models.CharField(max_length=15, choices=TYPES, default=TYPES.main_frame)
