@@ -11,7 +11,7 @@
   },
   "devtools_page": "devtools.html",
   "background": {
-    "scripts": ["lib/filer.js", "lib/store.js", "background.js"],
+    "scripts": ["lib/filer.js", "lib/store.js", "lib/zepto.js", "background.js"],
     "persistent": true
   },
   "options_page": "lib/options_custom/index.html",
@@ -23,6 +23,7 @@
     "storage",
     "tabs",
     "unlimitedStorage",
+    "webRequest",
     "https://*/*", 
     "http://*/*"
   ],

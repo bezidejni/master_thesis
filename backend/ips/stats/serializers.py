@@ -6,6 +6,7 @@ from .models import CPUInfo, NetworkInfo
 class UnixEpochDateField(serializers.DateTimeField):
     def from_native(self, value):
         import datetime
+        print value
         return datetime.datetime.fromtimestamp(float(value)/1000.0)
 
 
