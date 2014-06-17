@@ -23,7 +23,6 @@ filer.init({persistent: true, size: 1024 * 1024}, function(fs) {
 }, onError);
 
 function init() {
-
     chrome.tabs.onUpdated.addListener(logOrNot);
 }
 
@@ -53,6 +52,15 @@ function siteTracked(url) {
 
 document.addEventListener('DOMContentLoaded', init);
 
+chrome.runtime.onMessage.addListener(handleDOMElementCount);
+
+chrome.webRequest.onResponseStarted.addListener(
+        handleNetworkResponse,
+        {urls: ["*://*.com/*"], types: ['main_frame', 'sub_frame', 'script']}
+);
+
+chrome.processes.onUpdated.addListener(handleCpuUpdate);
+
 function handleNetworkResponse(details) {
     chrome.tabs.get(details.tabId, function(tab) {
         networkEventsWaiting[details.requestId].source_url = tab.url;
@@ -67,6 +75,15 @@ function handleNetworkResponse(details) {
         type: details.type,
         timestamp: details.timeStamp
     };
+};
+
+function handleCpuUpdate(processes) {
+    var total = 0;
+    var timestamp = new Date().getTime();
+    for(var pid in processes) {
+        total += processes[pid].cpu;
+    }
+    cpuUsageList.push({'timestamp': timestamp, value:total.toFixed(3)});
 };
 
 function handleDOMElementCount(request, sender, sendResponse) {
@@ -86,25 +103,9 @@ function handleDOMElementCount(request, sender, sendResponse) {
     }
 };
 
-chrome.webRequest.onResponseStarted.addListener(
-        handleNetworkResponse,
-        {urls: ["*://*.com/*"], types: ['main_frame', 'sub_frame', 'script']}
-);
-
-chrome.runtime.onMessage.addListener(handleDOMElementCount);
-
-chrome.processes.onUpdated.addListener(function(processes) {
-    var total = 0;
-    var timestamp = new Date().getTime();
-    for(var pid in processes) {
-        total += processes[pid].cpu;
-    }
-    cpuUsageList.push({'timestamp': timestamp, value:total.toFixed(3)});
-});
-
 (function sendNetworkDataHome() {
     $.ajax({
-        url: serverURL + '/network-info/',
+        url: serverURL + '/api/network/',
         data: JSON.stringify(networkEventsComplete),
         processData: false,
         contentType: 'application/json',
@@ -120,7 +121,7 @@ chrome.processes.onUpdated.addListener(function(processes) {
 
 (function sendDOMElementDataHome() {
     $.ajax({
-        url: serverURL + '/dom/',
+        url: serverURL + '/api/dom/',
         data: JSON.stringify(domElementCount),
         processData: false,
         contentType: 'application/json',
@@ -136,7 +137,7 @@ chrome.processes.onUpdated.addListener(function(processes) {
 
 (function sendCPUInfoDataHome() {
     $.ajax({
-        url: serverURL + '/cpu/',
+        url: serverURL + '/api/cpu/',
         data: JSON.stringify(cpuUsageList),
         processData: false,
         contentType: 'application/json',
