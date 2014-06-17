@@ -11,11 +11,22 @@ this.manifest = {
             "label": "Tracking enabled",
         },
         {
+
+            "tab": "General options",
+            "group": "Basic settings",
+            "name": "serverURL",
+            "type": "text",
+            "label": "Server URL (including http://)",
+            "text": "http://ips.jukic.me",
+        },
+        {
             "tab": "General options",
             "group": "Basic settings",
             "name": "saveData",
             "type": "checkbox",
             "label": "Save tracked data",
+            "value": true,
+            "checked": true
         },
         {
             "tab": "General options",

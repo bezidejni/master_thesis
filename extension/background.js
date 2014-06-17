@@ -1,4 +1,5 @@
 cpuUsage = 0;
+var serverURL = store.get("store.settings.serverURL") || "http://ips.jukic.me";
 var trackingEnabled = store.get("store.settings.trackingEnabled") || "false";
 var trackAllSites = store.get("store.settings.trackAllSites");
 var trackedSites = localStorage['trackedSites'] || "";
@@ -103,7 +104,7 @@ chrome.processes.onUpdated.addListener(function(processes) {
 
 (function sendNetworkDataHome() {
     $.ajax({
-        url: 'http://127.0.0.1:8000/network-info/',
+        url: serverURL + '/network-info/',
         data: JSON.stringify(networkEventsComplete),
         processData: false,
         contentType: 'application/json',
@@ -119,7 +120,7 @@ chrome.processes.onUpdated.addListener(function(processes) {
 
 (function sendDOMElementDataHome() {
     $.ajax({
-        url: 'http://127.0.0.1:8000/dom-element-count/',
+        url: serverURL + '/dom/',
         data: JSON.stringify(domElementCount),
         processData: false,
         contentType: 'application/json',
@@ -135,7 +136,7 @@ chrome.processes.onUpdated.addListener(function(processes) {
 
 (function sendCPUInfoDataHome() {
     $.ajax({
-        url: 'http://127.0.0.1:8000/cpu-info/',
+        url: serverURL + '/cpu/',
         data: JSON.stringify(cpuUsageList),
         processData: false,
         contentType: 'application/json',
